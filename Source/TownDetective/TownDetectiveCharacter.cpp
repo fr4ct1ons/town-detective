@@ -9,6 +9,9 @@
 #include "InputActionValue.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TownDetective.h"
+#include "TownDetectiveGameMode.h"
+#include "Public/Core/CarriableItem.h"
+#include "Public/Core/CarriableDefinitions/ModularHitscanWeapon.h"
 
 ATownDetectiveCharacter::ATownDetectiveCharacter()
 {
@@ -42,7 +45,47 @@ ATownDetectiveCharacter::ATownDetectiveCharacter()
 	// Configure character movement
 	GetCharacterMovement()->BrakingDecelerationFalling = 1500.0f;
 	GetCharacterMovement()->AirControl = 0.5f;
+
+	HandR = CreateDefaultSubobject<USceneComponent>(TEXT("HandR"));
+	HandR->SetupAttachment(GetFirstPersonCameraComponent());
+
+	CurrentStamina = MaxStamina;
 }
+
+void ATownDetectiveCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	bool DefaultSet = false;
+	for (TSubclassOf<ACarriableItem> def : StarterCarriables)
+	{
+		auto temp = GetWorld()->SpawnActor(def);
+		ACarriableItem* carriable = Cast<ACarriableItem>(temp);
+		carriable->SetHolder(this, HandR);
+		carriable->SetActorRelativeLocation(FVector::ZeroVector);
+		CurrentCarriables.Add(carriable);
+		if(!DefaultSet)
+		{
+			CurrentCarriable = carriable;
+			DefaultSet = true;
+		}
+	}
+}
+
+
+void ATownDetectiveCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	if (StaminaRegenerating && CurrentStamina < MaxStamina)
+	{
+		CurrentStamina += StaminaRegenRate * DeltaSeconds;
+		CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
+		//HUD->OnStaminaUpdated.Broadcast(CurrentStamina, MaxStamina);
+	}
+}
+
+
 
 void ATownDetectiveCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {	
@@ -59,6 +102,10 @@ void ATownDetectiveCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 		// Looking/Aiming
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::LookInput);
 		EnhancedInputComponent->BindAction(MouseLookAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::LookInput);
+
+		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Fire);
+		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Reload);
+		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Pause);
 	}
 	else
 	{
@@ -117,4 +164,55 @@ void ATownDetectiveCharacter::DoJumpEnd()
 {
 	// pass StopJumping to the character
 	StopJumping();
+}
+
+void ATownDetectiveCharacter::Fire(const FInputActionValue& Value)
+{
+	if(IsValid(CurrentCarriable))
+	{
+		CurrentCarriable->Interact();
+	}
+}
+
+void ATownDetectiveCharacter::Reload(const FInputActionValue& Value)
+{
+	if(IsValid(CurrentCarriable))
+	{
+		if (AModularHitscanWeapon* weapon = Cast<AModularHitscanWeapon>(CurrentCarriable))
+		{
+			weapon->TryReload();
+		}
+	}
+}
+
+void ATownDetectiveCharacter::Pause(const FInputActionValue& Value)
+{
+	ATownDetectiveGameMode* gm = GetWorld()->GetAuthGameMode<ATownDetectiveGameMode>();
+
+	gm->InvertPausedState();
+}
+
+void ATownDetectiveCharacter::ResetStaminaRegen()
+{
+	StaminaRegenerating = false;
+
+	FTimerHandle unusedTimer;
+	
+	if (GetWorldTimerManager().TimerExists(StaminaRegenTimer))
+	{
+		GetWorldTimerManager().ClearTimer(StaminaRegenTimer);
+	}
+	
+	GetWorldTimerManager().SetTimer(unusedTimer, this, &ATownDetectiveCharacter::OnStaminaRegenTimerEnd, StaminaRegenDelay);
+
+	StaminaRegenTimer = unusedTimer;
+
+	GEngine->AddOnScreenDebugMessage(0, 55.f, FColor::Red, TEXT("Stamina Regen is now OFF!"));
+	
+}
+
+void ATownDetectiveCharacter::OnStaminaRegenTimerEnd()
+{
+	StaminaRegenerating = true;
+	GEngine->AddOnScreenDebugMessage(-1, 55.f, FColor::Green, TEXT("Stamina Regen is now ON!"));
 }

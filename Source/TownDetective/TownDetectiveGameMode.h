@@ -14,8 +14,19 @@ class ATownDetectiveGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
+protected:
+	
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnPaused();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnUnpaused();
+
 public:
 	ATownDetectiveGameMode();
+	
+	UFUNCTION(BlueprintCallable)
+	void InvertPausedState();
 };
 
 

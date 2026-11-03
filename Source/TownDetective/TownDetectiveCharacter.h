@@ -7,6 +7,7 @@
 #include "Logging/LogMacros.h"
 #include "TownDetectiveCharacter.generated.h"
 
+class ACarriableItem;
 class UInputComponent;
 class USkeletalMeshComponent;
 class UCameraComponent;
@@ -22,6 +23,17 @@ UCLASS(abstract)
 class ATownDetectiveCharacter : public ACharacter
 {
 	GENERATED_BODY()
+	
+	
+public:
+	ATownDetectiveCharacter();
+
+	virtual void BeginPlay() override;
+
+	virtual void Tick(float DeltaSeconds) override;
+	
+	////// Components
+protected:
 
 	/** Pawn mesh: first person view (arms; seen only by self) */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
@@ -31,8 +43,10 @@ class ATownDetectiveCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category="Components", meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FirstPersonCameraComponent;
 
-protected:
 
+	////// Input
+
+	
 	/** Jump Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	UInputAction* JumpAction;
@@ -48,12 +62,19 @@ protected:
 	/** Mouse Look Input Action */
 	UPROPERTY(EditAnywhere, Category ="Input")
 	class UInputAction* MouseLookAction;
+
+	/** Move Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> FireAction;
+
+	/** Reload Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ReloadAction;
+
+	/** Pause Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> PauseAction;
 	
-public:
-	ATownDetectiveCharacter();
-
-protected:
-
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -76,10 +97,71 @@ protected:
 	UFUNCTION(BlueprintCallable, Category="Input")
 	virtual void DoJumpEnd();
 
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Fire(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Reload(const FInputActionValue& Value);
+
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void Pause(const FInputActionValue& Value);
+
+
+	////// Stats
+	
+	/// Health
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float MaxHealth = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float CurrentHealth;
+
+	/// Stamina
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float MaxStamina = 100.f;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	float CurrentStamina;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	bool StaminaRegenerating = true;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float StaminaRegenRate = 3.0f;
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite)
+	float StaminaRegenDelay = 2.0f;
+
+	FTimerHandle StaminaRegenTimer;
+	
+	
 protected:
+
+	////// Misc
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	TArray<TSubclassOf<ACarriableItem>> StarterCarriables = TArray<TSubclassOf<ACarriableItem>>();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TArray<ACarriableItem*> CurrentCarriables = TArray<ACarriableItem*>();
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<USceneComponent> HandR;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	TObjectPtr<ACarriableItem> CurrentCarriable;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool IsTeleporting = false;
 
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
+
+	void ResetStaminaRegen();
+
+	void OnStaminaRegenTimerEnd();
 	
 
 public:

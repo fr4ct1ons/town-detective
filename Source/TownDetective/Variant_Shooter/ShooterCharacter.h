@@ -32,8 +32,8 @@ class TOWNDETECTIVE_API AShooterCharacter : public ATownDetectiveCharacter, publ
 protected:
 
 	/** Fire weapon input action */
-	UPROPERTY(EditAnywhere, Category ="Input")
-	UInputAction* FireAction;
+	//UPROPERTY(EditAnywhere, Category ="Input")
+	//UInputAction* FireAction;
 
 	/** Switch weapon input action */
 	UPROPERTY(EditAnywhere, Category ="Input")
