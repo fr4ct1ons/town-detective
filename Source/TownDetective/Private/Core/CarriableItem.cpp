@@ -54,3 +54,17 @@ void ACarriableItem::SetHolder(TObjectPtr<AActor> holder, TObjectPtr<USceneCompo
 	}
 }
 
+void ACarriableItem::Disable()
+{
+	SetActorHiddenInGame(true);
+	SetActorEnableCollision(false);
+	SetActorTickEnabled(false);
+}
+
+void ACarriableItem::Enable()
+{
+	SetActorHiddenInGame(false);
+	SetActorEnableCollision(true);
+	SetActorTickEnabled(true);
+}
+

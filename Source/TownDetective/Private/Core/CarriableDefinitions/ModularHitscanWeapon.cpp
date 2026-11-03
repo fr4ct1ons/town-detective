@@ -7,6 +7,29 @@
 #include "Camera/CameraComponent.h"
 #include "Kismet/GameplayStatics.h"
 
+void AModularHitscanWeapon::GetTraceVectors(FVector& StartPoint, FVector& EndPoint)
+{
+	ATownDetectiveCharacter* outPlayer;
+	if(TryGetPlayerHolder(outPlayer))
+	{
+
+		if(outPlayer != nullptr)
+		{
+			StartPoint = outPlayer->GetFirstPersonCameraComponent()->GetComponentLocation();
+			EndPoint = StartPoint + (outPlayer->GetFirstPersonCameraComponent()->GetForwardVector() * Range);
+		}
+		else
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "Error getting player.");
+		}
+	}
+	else
+	{
+		StartPoint = GetActorLocation();
+		EndPoint = GetActorLocation() + (GetActorForwardVector() * Range);
+	}
+}
+
 void AModularHitscanWeapon::Interact()
 {
 	if(!CanShoot())
@@ -23,34 +46,30 @@ void AModularHitscanWeapon::Interact()
 	
 	FHitResult HitResult;
 	
-	ATownDetectiveCharacter* outPlayer = nullptr;
-	FVector StartPoint;
-	FVector EndPoint;
+	FVector StartPoint(0.f);
+	FVector EndPoint(0.f);
 	
-	if(TryGetPlayerHolder(outPlayer))
-	{
+	GetTraceVectors(StartPoint, EndPoint);
+	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Cyan, true, 67.f, 0, 0.5f);
 
-		if(outPlayer != nullptr)
-		{
-			StartPoint = outPlayer->GetFirstPersonCameraComponent()->GetComponentLocation();
-			EndPoint = StartPoint + (outPlayer->GetFirstPersonCameraComponent()->GetForwardVector() * Range);
-		}
-		else
-		{
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, "Error getting player.");
-			return;
-		}
-	}
-	else
+	int32 traces = FMath::Max(1, TraceNumber);
+	for (int i = 0; i < traces; ++i)
 	{
-		StartPoint = GetActorLocation();
-		EndPoint = GetActorLocation() + (GetActorForwardVector() * Range);
-	}
+		FVector randomEnd = EndPoint + FVector(
+			FMath::RandRange(-MinTraceSpread, MinTraceSpread),
+			FMath::RandRange(-MinTraceSpread, MinTraceSpread),
+			FMath::RandRange(-MinTraceSpread, MinTraceSpread));
+		GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, randomEnd, ECC_Visibility );
 	
-	GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, EndPoint, ECC_Visibility );
+		if(HitResult.bBlockingHit)
+		{
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Hit Point:" + HitResult.GetActor()->GetName());
+			UGameplayStatics::ApplyDamage(HitResult.GetActor(), 20.f, GetInstigatorController(), this, UDamageType::StaticClass());
+		}
 
-	DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, true, 67.f, 0, 1.f);
-	DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Green, true, 67.f, 0, 1.f);
+		DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, true, 67.f, 0, 1.f);
+		DrawDebugLine(GetWorld(), StartPoint, randomEnd, FColor::Green, true, 67.f, 0, 0.5f);
+	}
 
 	if (!FMath::IsNearlyZero(ShootingCooldown))
 	{
@@ -69,12 +88,6 @@ void AModularHitscanWeapon::Interact()
 	{
 		TryReload();
 		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Yellow, "Reload is needed - Bullets left:" + CurrentCarriedAmmo);
-	}
-	
-	if(HitResult.bBlockingHit)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Hit Point:" + HitResult.GetActor()->GetName());
-		UGameplayStatics::ApplyDamage(HitResult.GetActor(), 20.f, GetInstigatorController(), this, UDamageType::StaticClass());
 	}
 
 	Super::Interact();

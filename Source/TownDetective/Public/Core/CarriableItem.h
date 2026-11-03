@@ -39,4 +39,8 @@ public:
 	virtual void SetHolder(TObjectPtr<AActor> holder, FName socket);
 	virtual void SetHolder(TObjectPtr<AActor> holder, TObjectPtr<USceneComponent> holderComponent);
 
+	virtual void Disable();
+	
+	virtual void Enable();
+
 };

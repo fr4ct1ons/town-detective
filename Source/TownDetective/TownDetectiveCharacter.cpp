@@ -68,6 +68,11 @@ void ATownDetectiveCharacter::BeginPlay()
 		{
 			CurrentCarriable = carriable;
 			DefaultSet = true;
+			CurrentCarriable->Enable();
+		}
+		else
+		{
+			carriable->Disable();
 		}
 	}
 }
@@ -106,6 +111,7 @@ void ATownDetectiveCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 		EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Fire);
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Reload);
 		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Pause);
+		EnhancedInputComponent->BindAction(ItemSelectionAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::DoItemSelection);
 	}
 	else
 	{
@@ -191,6 +197,23 @@ void ATownDetectiveCharacter::Pause(const FInputActionValue& Value)
 
 	gm->InvertPausedState();
 }
+
+
+void ATownDetectiveCharacter::DoItemSelection(const FInputActionValue& value)
+{
+	float indexFloat = value.Get<float>();
+
+	int32 index = FMath::RoundToInt32(indexFloat);
+	index--;
+
+	if (index >= 0 && index < CurrentCarriables.Num())
+	{
+		CurrentCarriable->Disable();
+		CurrentCarriable = CurrentCarriables[index];
+		CurrentCarriable->Enable();
+	}
+}
+
 
 void ATownDetectiveCharacter::ResetStaminaRegen()
 {

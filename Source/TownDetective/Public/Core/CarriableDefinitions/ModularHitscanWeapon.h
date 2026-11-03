@@ -15,7 +15,15 @@ class TOWNDETECTIVE_API AModularHitscanWeapon : public ACarriableItem
 	GENERATED_BODY()
 
 protected:
+	void GetTraceVectors(FVector& StartPoint, FVector& EndPoint);
 	virtual void Interact() override;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	int32 TraceNumber = 1;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float MinTraceSpread = 0.f;
+	float MaxTraceSpread = 0.f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	float Range = 10000.f;

@@ -75,6 +75,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> PauseAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> ItemSelectionAction;
+	
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -105,6 +108,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Pause(const FInputActionValue& Value);
+	void DoItemSelection(const FInputActionValue& value);
 
 
 	////// Stats
