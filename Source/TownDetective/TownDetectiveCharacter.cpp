@@ -206,7 +206,7 @@ void ATownDetectiveCharacter::DoItemSelection(const FInputActionValue& value)
 	int32 index = FMath::RoundToInt32(indexFloat);
 	index--;
 
-	if (index >= 0 && index < CurrentCarriables.Num())
+	if (index >= 0 && index < CurrentCarriables.Num() && CurrentCarriable != CurrentCarriables[index])
 	{
 		CurrentCarriable->Disable();
 		CurrentCarriable = CurrentCarriables[index];

@@ -85,6 +85,9 @@ void AOthersidePreview::Tick(float DeltaTime)
 void AOthersidePreview::Init(ATownDetectiveCharacter* newPlayer, FVector newOffset)
 {
 	Player = newPlayer;
+	
+	Collider->SetCapsuleHalfHeight(Player->GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+	Collider->SetCapsuleRadius(Player->GetCapsuleComponent()->GetUnscaledCapsuleRadius());
 
 	Offset = newOffset;
 	SetActorLocation(Player->GetActorLocation() + (Swapped ? -Offset : Offset));
