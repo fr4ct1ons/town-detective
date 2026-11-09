@@ -21,9 +21,15 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	FText InteractionName = FText::FromString("Interact");
+
 public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void Interact(ATownDetectiveCharacter* playaer);
+	virtual void Interact(ATownDetectiveCharacter* player);
+
+	UFUNCTION()
+	FText GetInteractionName();
 };

@@ -24,7 +24,12 @@ void AOverworldEntity::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
-void AOverworldEntity::Interact(ATownDetectiveCharacter* playaer)
+void AOverworldEntity::Interact(ATownDetectiveCharacter* player)
 {
+}
+
+FText AOverworldEntity::GetInteractionName()
+{
+	return InteractionName;
 }
 

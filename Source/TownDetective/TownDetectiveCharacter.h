@@ -7,6 +7,8 @@
 #include "Logging/LogMacros.h"
 #include "TownDetectiveCharacter.generated.h"
 
+class AOverworldEntity;
+class UPlayerHUD;
 class ACarriableItem;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -78,6 +80,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	TObjectPtr<UInputAction> ItemSelectionAction;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
+	TObjectPtr<UInputAction> InteractAction;
+
 	/** Called from Input Actions for movement input */
 	void MoveInput(const FInputActionValue& Value);
 
@@ -108,7 +113,12 @@ protected:
 
 	UFUNCTION(BlueprintCallable, Category="Input")
 	void Pause(const FInputActionValue& Value);
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
 	void DoItemSelection(const FInputActionValue& value);
+	
+	UFUNCTION(BlueprintCallable, Category="Input")
+	void DoInteraction(const FInputActionValue& value);
 
 
 	////// Stats
@@ -147,6 +157,9 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	TArray<TSubclassOf<ACarriableItem>> StarterCarriables = TArray<TSubclassOf<ACarriableItem>>();
+	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	float InteractionRange = 220.f;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TArray<ACarriableItem*> CurrentCarriables = TArray<ACarriableItem*>();
@@ -159,6 +172,15 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	bool IsTeleporting = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TSubclassOf<UPlayerHUD> PlayerHUDClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	TObjectPtr<UPlayerHUD> PlayerHUD;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly)
+	TObjectPtr<AOverworldEntity> CurrentEntity;
 
 	/** Set up input action bindings */
 	virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;

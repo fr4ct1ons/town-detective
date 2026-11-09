@@ -38,3 +38,8 @@ FString ARadioSignal::GetSignalName()
 	return SignalName;
 }
 
+void ARadioSignal::Interact(ATownDetectiveCharacter* player)
+{
+	Super::Interact(player);
+	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Emerald, "You've interacted with me!");
+}

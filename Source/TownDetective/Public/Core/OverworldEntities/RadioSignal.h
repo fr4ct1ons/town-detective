@@ -36,4 +36,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	float GetCaptureDistance();
 	FString GetSignalName();
+
+	virtual void Interact(ATownDetectiveCharacter* player) override;
+
 };

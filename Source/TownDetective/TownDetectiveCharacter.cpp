@@ -10,8 +10,12 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "TownDetective.h"
 #include "TownDetectiveGameMode.h"
+#include "Blueprint/UserWidget.h"
+#include "Core/OverworldEntity.h"
+#include "Kismet/GameplayStatics.h"
 #include "Public/Core/CarriableItem.h"
 #include "Public/Core/CarriableDefinitions/ModularHitscanWeapon.h"
+#include "UI/PlayerHUD.h"
 
 ATownDetectiveCharacter::ATownDetectiveCharacter()
 {
@@ -75,6 +79,10 @@ void ATownDetectiveCharacter::BeginPlay()
 			carriable->Disable();
 		}
 	}
+
+	APlayerController* pc = GetWorld()->GetFirstPlayerController();
+	PlayerHUD = CreateWidget<UPlayerHUD>(pc, PlayerHUDClass);
+	PlayerHUD->AddToViewport();
 }
 
 
@@ -88,6 +96,43 @@ void ATownDetectiveCharacter::Tick(float DeltaSeconds)
 		CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
 		//HUD->OnStaminaUpdated.Broadcast(CurrentStamina, MaxStamina);
 	}
+
+	
+	FHitResult HitResult;
+	
+	FVector StartPoint(0.f);
+	FVector EndPoint(0.f);
+	
+	StartPoint = GetFirstPersonCameraComponent()->GetComponentLocation();
+	EndPoint = StartPoint + (GetFirstPersonCameraComponent()->GetForwardVector() * InteractionRange);
+	//DrawDebugLine(GetWorld(), StartPoint, EndPoint, FColor::Cyan, true, 67.f, 0, 0.5f);
+	
+	GetWorld()->LineTraceSingleByChannel(HitResult, StartPoint, EndPoint, ECC_Visibility );
+
+	//TODO: Clean this up
+	if(HitResult.bBlockingHit)
+	{
+		if (HitResult.GetActor()->IsA<AOverworldEntity>())
+		{
+			CurrentEntity = Cast<AOverworldEntity>(HitResult.GetActor());
+			//GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, "Hit Point:" + ent->GetActorLabel());
+			UGameplayStatics::ApplyDamage(HitResult.GetActor(), 20.f, GetInstigatorController(), this, UDamageType::StaticClass());
+			PlayerHUD->SetInteractionName(CurrentEntity->GetInteractionName());
+			PlayerHUD->SetInteractionVisible(true);
+		}
+		else
+		{
+			CurrentEntity = nullptr;
+			PlayerHUD->SetInteractionVisible(false);
+		}
+	}
+	else
+	{
+		CurrentEntity = nullptr;
+		PlayerHUD->SetInteractionVisible(false);
+	}
+
+	//DrawDebugLine(GetWorld(), StartPoint, HitResult.Location, FColor::Red, true, 1.1f, 0, 1.f);
 }
 
 
@@ -112,6 +157,7 @@ void ATownDetectiveCharacter::SetupPlayerInputComponent(UInputComponent* PlayerI
 		EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Reload);
 		EnhancedInputComponent->BindAction(PauseAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::Pause);
 		EnhancedInputComponent->BindAction(ItemSelectionAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::DoItemSelection);
+		EnhancedInputComponent->BindAction(InteractAction, ETriggerEvent::Triggered, this, &ATownDetectiveCharacter::DoInteraction);
 	}
 	else
 	{
@@ -211,6 +257,15 @@ void ATownDetectiveCharacter::DoItemSelection(const FInputActionValue& value)
 		CurrentCarriable->Disable();
 		CurrentCarriable = CurrentCarriables[index];
 		CurrentCarriable->Enable();
+	}
+}
+
+
+void ATownDetectiveCharacter::DoInteraction(const FInputActionValue& value)
+{
+	if (IsValid(CurrentEntity))
+	{
+		CurrentEntity->Interact(this);
 	}
 }
 
