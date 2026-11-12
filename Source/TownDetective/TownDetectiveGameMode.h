@@ -21,12 +21,24 @@ protected:
 
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnUnpaused();
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	bool bRayTracedLightingEnabled = false;
+	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	int32 DesiredHeight = 360;
 
+	virtual void BeginPlay() override;
+
+	
 public:
 	ATownDetectiveGameMode();
 	
 	UFUNCTION(BlueprintCallable)
 	void InvertPausedState();
+	
+	UFUNCTION(BlueprintCallable, BlueprintPure)
+	float GetScreenPercentage() const;
 };
 
 
