@@ -7,6 +7,7 @@
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SceneCaptureComponent2D.h"
+#include "Materials/MaterialParameterCollectionInstance.h"
 
 // Sets default values
 AOthersidePreview::AOthersidePreview()
@@ -30,18 +31,17 @@ AOthersidePreview::AOthersidePreview()
 	
 	PastCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Past Scene Capture"));
 	PastCapture->SetupAttachment(CaptureRoot);
-	
-	PresentCapture = CreateDefaultSubobject<USceneCaptureComponent2D>(TEXT("Present Scene Capture"));
-	PresentCapture->SetupAttachment(CaptureRoot);
 
-	PresentCapture->Deactivate();
-	PresentCapture->SetVisibility(false);
+	//PresentCapture->SetActive(false);
+	//PresentCapture->SetVisibility(false);
 }
 
 // Called when the game starts or when spawned
 void AOthersidePreview::BeginPlay()
 {
 	Super::BeginPlay();
+	CrossWorldMPCInstance = GetWorld()->GetParameterCollectionInstance(CrossWorldMPC);
+	CrossWorldMPCInstance->SetScalarParameterValue("IsOnPast", 0.f);
 }
 
 void AOthersidePreview::OverlapAdded(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent
@@ -91,17 +91,21 @@ void AOthersidePreview::Init(ATownDetectiveCharacter* newPlayer, FVector newOffs
 
 	Offset = newOffset;
 	SetActorLocation(Player->GetActorLocation() + (Swapped ? -Offset : Offset));
+
+	PastCapture->FirstPersonFieldOfView = Player->GetFirstPersonCameraComponent()->FirstPersonFieldOfView;
+	PastCapture->FOVAngle = Player->GetFirstPersonCameraComponent()->FieldOfView;
 }
 
 void AOthersidePreview::Swap(FVector newPos)
 {
 	SetActorLocation(newPos);
-	PresentCapture->ToggleActive();
-	PresentCapture->ToggleVisibility();
-
-	PastCapture->ToggleActive();
-	PastCapture->ToggleVisibility();
+	
+	//PresentCapture->ToggleActive();
+	//PresentCapture->ToggleVisibility();
+	//PastCapture->ToggleActive();
+	//PastCapture->ToggleVisibility();
 	Swapped = !Swapped;
+	CrossWorldMPCInstance->SetScalarParameterValue("IsOnPast", Swapped? 1.f : 0.f);
 }
 
 bool AOthersidePreview::IsBlocked() const

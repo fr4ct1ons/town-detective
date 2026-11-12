@@ -32,15 +32,18 @@ protected:
 	
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TObjectPtr<USceneCaptureComponent2D> PastCapture;
-	
-	UPROPERTY(BlueprintReadOnly, EditAnywhere)
-	TObjectPtr<USceneCaptureComponent2D> PresentCapture;
 
 	UPROPERTY(BlueprintReadWrite)
 	TObjectPtr<ATownDetectiveCharacter> Player;
 
 	UPROPERTY(BlueprintReadOnly)
 	bool Blocked;
+
+	UPROPERTY(BlueprintReadOnly, EditAnywhere)
+	TObjectPtr<UMaterialParameterCollection> CrossWorldMPC;
+	
+	UPROPERTY(BlueprintReadOnly, VisibleAnywhere)
+	TObjectPtr<UMaterialParameterCollectionInstance> CrossWorldMPCInstance;
 
 	TArray<UPrimitiveComponent*> OverlappedActors;
 
